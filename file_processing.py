@@ -6,12 +6,12 @@ import numpy as np
 from random import randrange
 import matplotlib.pyplot as plt
 
-def load_single_image(image_path: str):
+def load_single_image(imagePath: str):
     print('load image')
-    image = tf.io.read_file(image_path)
-    if image_path.endswith(".jpg"):
+    image = tf.io.read_file(imagePath)
+    if imagePath.endswith(".jpg"):
         image = tf.io.decode_jpeg(image, channels=3)
-    elif image_path.endswith(".png"):
+    elif imagePath.endswith(".png"):
         image = tf.io.decode_png(image, channels=3)
 
     return image
@@ -27,4 +27,8 @@ def show_single_image(image):
 
 def load_multiple_images():
     print('load_multiple_images')
+
+def decode_jpeg(image):
+    image = tf.io.decode_jpeg(image, channels=3)
+    return tf.image.resize(image, [var.imageHeight, var.imageWidth])
 
