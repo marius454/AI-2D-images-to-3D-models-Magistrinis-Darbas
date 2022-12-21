@@ -10,3 +10,4 @@ tf-nightly
 pydot
 # graphviz (https://graphviz.gitlab.io/download/)
 
+dataIO
