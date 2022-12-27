@@ -15,17 +15,19 @@ import variables as var
 
 # print (threeD_gan.initialiseWeights())
 
-generator = threeD_gan.make_generator_model()
+# generator = threeD_gan.make_generator_model()
 
 
-z = tf.random.uniform([1, 200], minval=0, maxval=1)
-z = tf.reshape(z, (-1, 1, 1, 1, var.threeD_gan_z_size))
-generated_3d_model = generator(z, training=False)
-generated_3d_model = tf.where(generated_3d_model > 0.5, True, False).numpy()
+# z = tf.random.uniform((1, 200), minval=0, maxval=1)
+# z = tf.reshape(z, (-1, 1, 1, 1, var.threeD_gan_z_size))
+# generated_3d_model = generator(z, training=False)
+# generated_3d_model = tf.where(generated_3d_model > 0.5, True, False).numpy()
 
-# print (generated_3d_model[0, :, :, :, 0])
+# # print (generated_3d_model[0, :, :, :, 0])
 
-discriminator = threeD_gan.make_discriminator_model()
-decision = discriminator(generated_3d_model)
-print (decision)
+# discriminator = threeD_gan.make_discriminator_model()
+# decision = discriminator(generated_3d_model)
+# print (decision)
+
+encoder = threeD_gan.make_encoder_model()
 
