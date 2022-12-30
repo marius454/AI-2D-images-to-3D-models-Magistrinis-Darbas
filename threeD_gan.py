@@ -92,18 +92,18 @@ def make_encoder_model():
 cross_entropy = tf.keras.losses.BinaryCrossentropy(from_logits=True)
 
 # Compares the discriminator's predictions on real images to an array of 1s, and the discriminator's predictions on fake (generated) images to an array of 0s.
-def discriminator_loss(real_output, fake_output):
+def discriminator_loss(real_output, generated_output):
     real_loss = cross_entropy(tf.ones_like(real_output), real_output)
-    fake_loss = cross_entropy(tf.zeros_like(fake_output), fake_output)
+    fake_loss = cross_entropy(tf.zeros_like(generated_output), generated_output)
     total_loss = real_loss + fake_loss
     return total_loss
 
 # Compare the discriminators decisions on the generated images to an array of 1s.
-def generator_loss(fake_output):
-    G_loss = cross_entropy(tf.ones_like(fake_output), fake_output)
+def generator_loss(generated_output):
+    G_loss = cross_entropy(tf.ones_like(generated_output), generated_output)
     return 
 
-def vae_loss(encoder_output, real_objects, generated_objects, real_output, fake_output):
+def vae_loss(encoder_output, real_objects, generated_objects):
     """
     Provide:
     an array of real objects coresponding to some images
@@ -117,7 +117,7 @@ def vae_loss(encoder_output, real_objects, generated_objects, real_output, fake_
     prior_var = tf.fill([None, 200], 1)
     prior = tf.concat([prior_mean, prior_var], 1)
     KL_loss = tf.keras.losses.kl_divergence(encoder_output, prior)
-    recon_loss = tf.keras.losses.mean_squared_error(real_objects, generated_objects)
+    recon_loss = tf.keras.losses.mean_squared_error(real_objects, generated_objects) # Might need absolute error, hard to say from the paper
 
     total_loss = a1*KL_loss + a2*recon_loss
     return total_loss
@@ -150,7 +150,3 @@ def train_3d_vae_gan(data):
 
     z = tf.random.uniform((1, var.threeD_gan_z_size), minval=0, maxval=1)
     z = tf.reshape(z, (-1, 1, 1, 1, var.threeD_gan_z_size))
-
-
-
-# def train_3d_VAE_gan():
