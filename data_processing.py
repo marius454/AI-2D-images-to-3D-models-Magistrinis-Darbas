@@ -113,7 +113,30 @@ def get_shape_screenshots(shape_codes, directory):
     
     return shape_screenshots
 
+def load_data(dataset = 'shapenet_table'):
+    datasets = ['shapenet_table']
+    if dataset not in datasets:
+        raise 'undefined dataset name given to load_data()'
 
+    if dataset == "shapenet_table":
+        result = load_shapenet_data("./Data/ShapeNetSem/single_table.csv")
+        return result
+        # return load_shapenet_data("./Data/ShapeNetSem/Table.csv")
+
+def load_shapenet_data(code_directory):
+    shape_codes = get_shape_code_list(code_directory)
+    shapes = get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox/")
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/")
+
+    inputs = tf.nest.flatten(shape_screenshots.values())
+    labels = []
+    for code in shape_codes:
+        shape_data = np.array(shapes[code].data)
+        shape_data = np.where(shape_data, 1.0, 0.0).astype(np.float32)
+        for i in range(len(shape_screenshots[code])):
+            labels.append(shape_data)
+
+    return tf.data.Dataset.from_tensor_slices((inputs, labels))
 
 
 

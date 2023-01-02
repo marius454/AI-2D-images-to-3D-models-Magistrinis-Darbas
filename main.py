@@ -1,6 +1,7 @@
 import tensorflow as tf
 import numpy as np
 import os
+import sys
 import tensorflow_datasets as tfds
 import time
 import string
@@ -11,12 +12,14 @@ import threeD_gan
 import z_gan
 import variables as var
 
+tensorboard = tf.keras.callbacks.TensorBoard(log_dir="./TensorLogs")
+
 ## TODO list:
 # In the paper, the final result is the largest connected component
 # Reference the Shapenet database in my report 
 # Might need to fix images to be loaded as floats in range [0; 1]
 
-tf.keras.mixed_precision.set_global_policy('mixed_float16')
+# tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 # image = dp.load_single_image('chair.png')
 # dp.show_single_image(image)
@@ -47,11 +50,6 @@ tf.keras.mixed_precision.set_global_policy('mixed_float16')
 # print(generator)
 
 
-shape_codes = dp.get_shape_code_list("./Data/ShapeNetSem/Table.csv")
-shapes = dp.get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox/")
-shape_screenshots = dp.get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/")
-
-
 # shape_keys = list(shapes.keys())
 # shape_screenshot_keys = list(shape_screenshots.keys())
 # last_shape_screenshots = shape_screenshots[shape_screenshot_keys[-1]]
@@ -74,3 +72,22 @@ shape_screenshots = dp.get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/sc
 # dp.show_single_image(last_shape_screenshots[3])
 # dp.show_single_image(last_shape_screenshots[4])
 # dp.show_single_image(last_shape_screenshots[5])
+
+# dataset = dp.load_data()
+# print (list(dataset.as_numpy_iterator()))
+
+# shape_codes = dp.get_shape_code_list("./Data/ShapeNetSem/single_table.csv")
+# shapes = dp.get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox/")
+# # for code in shape_codes:
+# #     shapes[code].data = 
+# shape_data = np.array(shapes[shape_codes[0]].data)
+# shape_data = np.where(shape_data, 1.0, 0.0).astype(np.float32)
+# print (sys.getsizeof(shape_data))
+# list1 = [shape_data, shape_data, shape_data]
+# print (sys.getsizeof(list1))
+# # list1 = [[1,2,3], [1,2,3], [1,2,3]]
+# list2 = [1,2,3]
+# dataset = tf.data.Dataset.from_tensor_slices((list2, list1))
+# print (list(dataset.as_numpy_iterator()))
+
+threeD_gan.train_3d_vae_gan(epochs=10)
