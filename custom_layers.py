@@ -22,3 +22,11 @@ class Split(tf.keras.layers.Layer):
         z_mean, z_var = tf.split(inputs, num_or_size_splits=2, axis=1)
         
         return z_mean, z_var
+
+class Threshold(tf.keras.layers.Layer):
+    """Thresholds tensor values into bool values"""
+
+    def call(self, inputs, threshold = 0.5):
+        outputs = tf.where(inputs > threshold, 1.0, 0.0)
+        
+        return outputs

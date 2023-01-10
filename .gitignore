@@ -3,3 +3,5 @@ Data/
 .venv/
 __pycache__/
 TensorLogs/
+backups/
+training_checkpoints/
