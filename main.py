@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import binvox_rw as bv
 
 import data_processing as dp
-import threeD_gan
+import ThreeD_gan.threeD_gan as threeD_gan
 import z_gan
 import variables as var
 
@@ -155,3 +155,4 @@ dp.plot_3d_model(generated_shape[0, :, :, :, 0], (64, 64, 64))
 # Get a way to downscale the ShapeNet images
 # Try to speed up training
 # Calculate accuracy of discriminator and only update it if the accuracy is less than 80%
+# Search "TODO" in all files, for other entries.

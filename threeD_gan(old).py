@@ -11,11 +11,11 @@ import gc
 from tensorflow_probability.python.distributions import kullback_leibler as kl_lib
 import tensorflow_probability as tfp
 
-# from memory_saving_gradients import gradients
 
 # Weight initialization described in Radford et al. [2016]
 # Filter values are equivalent to channels in Wu et al. [2016]
 def make_generator_model():
+    """Creates generator model as discribed in Wu et al. [2016], but according to the settings in variables.py file"""
     res = var.threeD_gan_resolution
     model = tf.keras.Sequential()
 
@@ -47,6 +47,7 @@ def make_generator_model():
 
 
 def make_discriminator_model():
+    """Creates discriminator model as discribed in Wu et al. [2016], but according to the settings in variables.py file"""
     res = var.threeD_gan_resolution
     model = tf.keras.Sequential()
 
@@ -74,6 +75,7 @@ def make_discriminator_model():
 
 # takes a 256x256x3 image as input and outputs a 200 dimensional vector
 def make_encoder_model():
+    """Creates encoder model as discribed in Wu et al. [2016]"""
     model = tf.keras.Sequential(
         [
             tf.keras.layers.Conv2D(filters=64, kernel_size=11, strides=4, padding="same", use_bias=False,
@@ -142,9 +144,9 @@ def generator_accuracy(generated_output):
 def vae_loss(z_means, z_vars, real_shapes, generated_shapes):
     """
     Provide:
-    `z_means` - an array of real objects coresponding to some images
-    `z_vars` - an array objects generated from those images
-    `real_shapes` - an array of discriminator predictions on the real objects
+    `z_means` - an array of real objects coresponding to some images\n
+    `z_vars` - an array objects generated from those images\n
+    `real_shapes` - an array of discriminator predictions on the real objects\n
     `generated_shapes` - an array of discriminator predictions on the fake objects
     """
     KL_loss = kullback_leiber_loss(z_means, z_vars)
@@ -253,7 +255,7 @@ def train_3d_vae_gan(epochs = var.threeD_gan_epochs):
 
 def train_step1(real_shapes, noise, generator, discriminator, D_optimizer, seed=None):
     with tf.GradientTape() as disc_tape:
-        generated_shapes = generator(inputs=noise, training=True)
+        generated_shapes = generator(inputs=noise, training=False)
         real_output = discriminator(inputs=real_shapes, training=True)
         generated_output = discriminator(inputs=generated_shapes, training=True)
 
@@ -271,7 +273,7 @@ def train_step2(images, real_shapes, generator, encoder, E_optimizer, seed=None)
         encoder_output = encoder(inputs=images, training=True)
         z_means, z_vars = tf.split(encoder_output, num_or_size_splits=2, axis=1)
         z = get_z(z_means, z_vars, len(images))
-        generated_shapes = generator(inputs=z, training=True)
+        generated_shapes = generator(inputs=z, training=False)
 
         enc_loss = vae_loss(z_means, z_vars, real_shapes, generated_shapes)
 
@@ -283,9 +285,9 @@ def train_step2(images, real_shapes, generator, encoder, E_optimizer, seed=None)
 def train_step3(images, real_shapes, noise, generator, discriminator, encoder, G_optimizer, seed=None):
     with tf.GradientTape() as gen_tape:
         shapes_from_noise = generator(inputs=noise, training=True)
-        output_from_noise = discriminator(inputs=shapes_from_noise, training=True)
+        output_from_noise = discriminator(inputs=shapes_from_noise, training=False)
 
-        encoder_output = encoder(inputs=images, training=True)
+        encoder_output = encoder(inputs=images, training=False)
         z_means, z_vars = tf.split(encoder_output, num_or_size_splits=2, axis=1)
         z = get_z(z_means, z_vars, len(images))
         generated_shapes = generator(inputs=z, training=True)

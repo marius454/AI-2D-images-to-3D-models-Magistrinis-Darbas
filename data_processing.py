@@ -12,6 +12,7 @@ import random
 from skimage.transform import resize
 
 def load_single_image(imagePath: str):
+    """Load image file into code as tensor."""
     print('load image')
     image = tf.io.read_file(imagePath)
     if imagePath.endswith(".jpg"):
@@ -22,6 +23,7 @@ def load_single_image(imagePath: str):
     return image
 
 def show_single_image(image):
+    """Display a single 2D image using matplotlib."""
     print('show image')
     plt.figure(figsize=(10, 5))
 
@@ -33,17 +35,17 @@ def show_single_image(image):
 
 
 def decode_jpeg(image, resize_method='bilinear'):
-    """Load jpeg image into a tensor"""
+    """Load jpeg image into a tensor."""
     image = tf.io.decode_jpeg(image, channels=3)
     return tf.image.resize(image, [var.imageHeight, var.imageWidth], method=resize_method)
 
 def decode_png(image, resize_method='bilinear'):
-    """Load png image into a tensor"""
+    """Load png image into a tensor."""
     image = tf.io.decode_png(image, channels=3)
     return tf.image.resize(image, [var.imageHeight, var.imageWidth], method=resize_method)
 
 def normalize_image(image):
-    """Normalize 8 bit image into range [0, 1]"""
+    """Normalize 8 bit image into range [0, 1]."""
     image = tf.cast(image, tf.float32) / 255.0
     return image
 
@@ -60,10 +62,10 @@ def normalize_image(image):
 
 def plot_3d_model(model, dimensions = (128, 128, 128)):
     """
-    Plots a 3D model using matplotlib (binvox formal highly preferable, the code will not receive an error but might not work)
+    Plots a 3D model using matplotlib (binvox formal highly preferable, the code will not receive an error but might not work).
 
-    model - a 3 dimensional array to plot in matplotlib
-    dimensions - list or tuple of x,y,z axis sizes for the object space eg. (64, 64, 64)
+    model - a 3 dimensional array to plot in matplotlib.
+    dimensions - list or tuple of x,y,z axis sizes for the object space eg. (64, 64, 64).
     """
     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
     ax = plt.figure().add_subplot(projection='3d')
@@ -72,44 +74,46 @@ def plot_3d_model(model, dimensions = (128, 128, 128)):
     ax.set_aspect('equal')
     plt.show()
 
-# def show_image_and_shape(image, real_shape, encoder, generator, dimensions = (128, 128, 128)):
-#     """Show the image of an object, it's ground trush 3D model, and the generated model"""
-#     plt.figure(figsize=(10, 5))
 
-#     title = ['Input Image', 'True shape', 'Generated shape']
-#     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
+# TODO make sure this is functional
+def show_image_and_shape(image, real_shape, encoder, generator, dimensions = (128, 128, 128)):
+    """Show the image of an object, it's ground trush 3D model, and the generated model."""
+    plt.figure(figsize=(10, 5))
 
-#     plt.subplot(1, len(title), 1)
-#     plt.title('Input Image')
-#     plt.imshow(tf.keras.utils.array_to_img(image))
-#     plt.axis('off')
+    title = ['Input Image', 'True shape', 'Generated shape']
+    x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
 
-#     plt.subplot(1, len(title), 2)
-#     plt.title(title[0])
-#     plt.voxels(x, y, z, real_shape)
-#     plt.axis('off')
+    plt.subplot(1, len(title), 1)
+    plt.title('Input Image')
+    plt.imshow(tf.keras.utils.array_to_img(image))
+    plt.axis('off')
 
-#     z = encoder(image)
-#     generated_shape = generator(z, training = False)
+    plt.subplot(1, len(title), 2)
+    plt.title(title[0])
+    plt.voxels(x, y, z, real_shape)
+    plt.axis('off')
 
-#     plt.subplot(1, len(title), 2)
-#     plt.title(title[0])
-#     plt.voxels(x, y, z, generated_shape)
-#     plt.axis('off')
+    z = encoder(image)
+    generated_shape = generator(z, training = False)
+
+    plt.subplot(1, len(title), 2)
+    plt.title(title[0])
+    plt.voxels(x, y, z, generated_shape)
+    plt.axis('off')
         
-#     plt.show()
+    plt.show()
 
 
 
 def load_file_mat(filepath):
-    """Load a .mat file into a numpy array"""
+    """Load a .mat file into a numpy array."""
     data = scipy.io.loadmat(filepath)
     data = np.array(data['voxel'])
     data = np.where(data == 0, False, True)
     return data
 
 def load_directory_mat(directory):
-    """Load all .mat files from a directory into an list of numpy arrays"""
+    """Load all .mat files from a directory into an list of numpy arrays."""
     data_dict = {}
     for file in os.listdir(directory):
         filepath = directory + file
@@ -122,7 +126,7 @@ def load_directory_mat(directory):
 
 
 def get_shape_code_list(filepath):
-    """Load a list of ShapeNet shape codes from a .txt or .csv file"""
+    """Load a list of ShapeNet shape codes from a .txt or .csv file."""
     shape_codes = []
     with open(filepath) as file:
         for line in file:
@@ -131,7 +135,7 @@ def get_shape_code_list(filepath):
 
 
 def get_shapes(shape_codes, directory, downscale_factor = None):
-    """Load a dictionary a 3D models according to their shape codes"""
+    """Load a dictionary a 3D models according to their shape codes."""
     shapes = {}
     if directory[-1] != "/":
         directory = directory + "/"
@@ -147,7 +151,10 @@ def get_shapes(shape_codes, directory, downscale_factor = None):
     return shapes
 
 def get_shape_screenshots(shape_codes, directory):
-    """Load a dictionary of lists of images that render a shape referenced by a shape code"""
+    """
+    Load a dictionary of lists containing images that render a shape referenced by a shape code.
+    Assumed that ShapeNet image data is kept in PNG format.
+    """
     shape_screenshots = {}
     if directory[-1] != "/":
         directory = directory + "/"
@@ -167,6 +174,7 @@ def get_shape_screenshots(shape_codes, directory):
     return shape_screenshots
 
 
+# TODO Will have to make this more portable, currently other users will have to set up datasets themselves
 def load_data(dataset = 'shapenet_tables', downscale_factor = None):
     """
     Load shape and image data from a predifened shape code file into a tensor dataset
@@ -176,7 +184,7 @@ def load_data(dataset = 'shapenet_tables', downscale_factor = None):
     `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 300, but might change)\n
     `shapenet_single_table` - load a single table object from the shapenet_tables set
     """
-    datasets = ['shapenet_tables', 'shapenet_single_table']
+    datasets = ['shapenet_tables', 'shapenet_tables2', 'shapenet_limited_tables', 'shapenet_single_table'] 
     if dataset not in datasets:
         raise Exception('undefined dataset name given to load_data()')
 
@@ -195,7 +203,7 @@ def load_data(dataset = 'shapenet_tables', downscale_factor = None):
 
 
 def load_shapenet_data(codes_directory, downscale_factor = None):
-    """Load shapenet data into (shape, image) pairs tensor"""
+    """Load shapenet data into (shape, image) pairs tensor."""
     shape_codes = get_shape_code_list(codes_directory)
     shapes = get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox-custom/", downscale_factor)
     shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/")
@@ -209,6 +217,7 @@ def load_shapenet_data(codes_directory, downscale_factor = None):
 
     return tf.data.Dataset.from_tensor_slices((inputs, labels))
 
+# This is a single use code for downscaling an entire directory of binvox models, uncommend if needed.
 # def downscale_binvox_dir(input_dir, output_dir, factor = 2):
 #     if input_dir[-1] != "/":
 #         input_dir = input_dir + '/'
