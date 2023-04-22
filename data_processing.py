@@ -208,6 +208,7 @@ def load_shapenet_data(codes_directory, downscale_factor = None):
     shapes = get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox-custom/", downscale_factor)
     shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/")
 
+    print("\nFormating data as (image, shape) pairs")
     inputs = tf.nest.flatten(shape_screenshots.values())
     labels = []
     for code in shape_codes:
