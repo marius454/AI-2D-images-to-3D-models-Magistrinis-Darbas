@@ -418,3 +418,73 @@ def get_z(z_means, z_vars, batch_size):
 # recon_loss = tf.keras.losses.MeanAbsoluteError()(real_shapes, generated_shapes)
 
 
+
+
+
+
+
+# class Encoder(tf.keras.layers.Layer):
+#     def __init__(self):
+#         '''
+#             channels = {64, 128, 256, 512, 400}
+#             input shape = (imgRes, imgRes, 3)
+#             kernel size = {11x11, 5x5, 5x5, 5x5, 8x8}
+#             strides = {4, 2, 2, 2, 1}
+#         '''
+#         super(Encoder, self).__init__()
+#         self.block_1 = blocks.Conv2DBlock(64, input_shape=(256, 256, 3), kernel_size = 11, strides = 4)
+#         self.block_2 = blocks.Conv2DBlock(128)
+#         self.block_3 = blocks.Conv2DBlock(256)
+#         self.block_4 = blocks.Conv2DBlock(512)
+
+#         prior_mean = tf.fill([200], 0.0)
+#         prior_var = tf.fill([200], 1.0)
+#         prior = tfp.distributions.MultivariateNormalDiag(prior_mean, prior_var)
+#         self.block_5 = blocks.Conv2DBlock(400, kernel_size = 8, strides = 1, padding = 'valid', 
+#                                           activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=5.0))
+
+#     def call(self, inputs):
+#         x = self.block_1(inputs)
+#         x = self.block_2(x)
+#         x = self.block_3(x)
+#         x = self.block_4(x)
+#         x = self.block_5(x, use_batch_norm = False, use_ReLU = False)
+#         return tf.keras.layers.Flatten()(x)
+
+
+
+
+# class Encoder(tf.keras.layers.Layer):
+#     def __init__(self):
+#         '''
+#             channels = {64, 128, 256, 512, 400}
+#             input shape = (imgRes, imgRes, 3)
+#             kernel size = {11x11, 5x5, 5x5, 5x5, 8x8}
+#             strides = {4, 2, 2, 2, 1}
+#         '''
+#         super(Encoder, self).__init__()
+#         self.block_1 = blocks.Conv2DBlock(64, input_shape=(256, 256, 3), kernel_size = 11, strides = 4)
+#         self.block_2 = blocks.Conv2DBlock(128)
+#         self.block_3 = blocks.Conv2DBlock(256)
+#         self.block_4 = blocks.Conv2DBlock(512)
+#         self.block_5 = blocks.Conv2DBlock(800, kernel_size = 8, strides = 1, padding = 'valid')
+#         # self.block_5 = blocks.Conv2DBlock(400, kernel_size = 8, strides = 1)
+
+#     def call(self, inputs):
+#         x = self.block_1(inputs)
+#         x = self.block_2(x)
+#         x = self.block_3(x)
+#         x = self.block_4(x)
+#         x = self.block_5(x, use_batch_norm = False, use_ReLU = False)
+#         x = tf.keras.layers.Flatten()(x)
+#         print(x.shape)
+#         x = tf.keras.layers.Dense(tfp.layers.MultivariateNormalTriL.params_size(200), activation=None)(x)
+#         print(x.shape)
+
+#         prior_mean = tf.fill([200], 0.0)
+#         prior_var = tf.fill([200], 1.0)
+#         prior = tfp.distributions.Normal(prior_mean, prior_var)
+#         # weight based on alpha1 in the paper
+#         x = tfp.layers.MultivariateNormalTriL(200, activity_regularizer=tfp.layers.KLDivergenceRegularizer(prior, weight=5.0))(x)
+#         print(x.shape)
+#         return x

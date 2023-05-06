@@ -9,11 +9,11 @@ import binvox_rw as bv
 import scipy.io
 from pathlib import Path
 import random
+
 from skimage.transform import resize
 
 def load_single_image(imagePath: str):
     """Load image file into code as tensor."""
-    print('load image')
     image = tf.io.read_file(imagePath)
     if imagePath.endswith(".jpg"):
         image = decode_jpeg(image)
@@ -34,15 +34,19 @@ def show_single_image(image):
 
 
 
-def decode_jpeg(image, resize_method='bilinear'):
+def decode_jpeg(image, resize_method='bilinear', image_res = None):
     """Load jpeg image into a tensor."""
     image = tf.io.decode_jpeg(image, channels=3)
-    return tf.image.resize(image, [var.imageHeight, var.imageWidth], method=resize_method)
+    if (image_res):
+        image = tf.image.resize(image, [image_res, image_res], method=resize_method)
+    return image
 
-def decode_png(image, resize_method='bilinear'):
+def decode_png(image, resize_method='bilinear', image_res = None):
     """Load png image into a tensor."""
     image = tf.io.decode_png(image, channels=3)
-    return tf.image.resize(image, [var.imageHeight, var.imageWidth], method=resize_method)
+    if (image_res):
+        image = tf.image.resize(image, [image_res, image_res], method=resize_method)
+    return image
 
 def normalize_image(image):
     """Normalize 8 bit image into range [0, 1]."""
@@ -123,6 +127,12 @@ def load_directory_mat(directory):
         data_dict[file] = data
     return data_dict
 
+def get_shape(filepath, downscale_factor = None):
+    with open(filepath, "rb") as f:
+        shape = bv.read_as_3d_array(f)
+        if downscale_factor:
+            shape = downscale_binvox(shape, factor=downscale_factor)
+    return shape
 
 
 def get_shape_code_list(filepath):
@@ -150,7 +160,7 @@ def get_shapes(shape_codes, directory, downscale_factor = None):
 
     return shapes
 
-def get_shape_screenshots(shape_codes, directory):
+def get_shape_screenshots(shape_codes, directory, image_res):
     """
     Load a dictionary of lists containing images that render a shape referenced by a shape code.
     Assumed that ShapeNet image data is kept in PNG format.
@@ -165,8 +175,9 @@ def get_shape_screenshots(shape_codes, directory):
             images = []
 
             # Load images from the selections of angles in range [1, 13]
+            # 8 and 12 might not be good, because with some models, the image might be straight on and not provido much 3D information.
             for i in [6, 7, 8, 9, 10, 11, 12, 13]:
-                image = decode_png(tf.io.read_file(f"{directory + folder}/{folder}-{i}.png"))
+                image = decode_png(tf.io.read_file(f"{directory + folder}/{folder}-{i}.png"), image_res)
                 image = normalize_image(image)
                 images.append(image)
             shape_screenshots[folder] = images
@@ -175,7 +186,7 @@ def get_shape_screenshots(shape_codes, directory):
 
 
 # TODO Will have to make this more portable, currently other users will have to set up datasets themselves
-def load_data(dataset = 'shapenet_tables', downscale_factor = None):
+def load_data(dataset, image_res, align_to_image = False, downscale_factor = None):
     """
     Load shape and image data from a predifened shape code file into a tensor dataset
 
@@ -184,30 +195,25 @@ def load_data(dataset = 'shapenet_tables', downscale_factor = None):
     `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 300, but might change)\n
     `shapenet_single_table` - load a single table object from the shapenet_tables set
     """
-    datasets = ['shapenet_tables', 'shapenet_tables2', 'shapenet_limited_tables', 'shapenet_single_table'] 
-    if dataset not in datasets:
+    datasets = {
+        'shapenet_tables': "./Data/ShapeNetSem/Table.csv", 
+        'shapenet_tables2': "./Data/ShapeNetSem/Table2.csv", 
+        'shapenet_limited_tables': "./Data/ShapeNetSem/limited_table.csv", 
+        'shapenet_single_table': "./Data/ShapeNetSem/single_table.csv"
+    }
+    if dataset not in datasets.keys():
         raise Exception('undefined dataset name given to load_data()')
 
-    if dataset == "shapenet_tables":
-        result = load_shapenet_data("./Data/ShapeNetSem/Table.csv", downscale_factor)
-        return result
-    if dataset == "shapenet_tables2":
-        result = load_shapenet_data("./Data/ShapeNetSem/Table2.csv", downscale_factor)
-        return result
-    if dataset == "shapenet_limited_tables":
-        result = load_shapenet_data("./Data/ShapeNetSem/limited_table.csv", downscale_factor)
-        return result
-    if dataset == "shapenet_single_table":
-        result = load_shapenet_data("./Data/ShapeNetSem/single_table.csv", downscale_factor)
-        return result
+    load_shapenet_data(dataset[dataset], image_res, downscale_factor)
 
 
-def load_shapenet_data(codes_directory, downscale_factor = None):
+def load_shapenet_data(codes_directory, image_res, downscale_factor = None):
     """Load shapenet data into (shape, image) pairs tensor."""
     shape_codes = get_shape_code_list(codes_directory)
     shapes = get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox-custom/", downscale_factor)
-    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/")
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res, )
 
+    print("\nFormating data as (image, shape) pairs")
     inputs = tf.nest.flatten(shape_screenshots.values())
     labels = []
     for code in shape_codes:
@@ -216,6 +222,14 @@ def load_shapenet_data(codes_directory, downscale_factor = None):
             labels.append(shape_data)
 
     return tf.data.Dataset.from_tensor_slices((inputs, labels))
+
+def downscale_binvox(binvox, factor = 2):
+    binvox.dims = [dim // 2 for dim in binvox.dims]
+    binvox.data = resize(binvox.data, (binvox.dims[0], binvox.dims[1], binvox.dims[2]))
+    return binvox
+
+
+
 
 # This is a single use code for downscaling an entire directory of binvox models, uncommend if needed.
 # def downscale_binvox_dir(input_dir, output_dir, factor = 2):
@@ -230,9 +244,3 @@ def load_shapenet_data(codes_directory, downscale_factor = None):
 #             shape.data = downscale_binvox(shape.data, factor)
 
 #         # with open(output_dir)
-
-def downscale_binvox(binvox, factor = 2):
-    binvox.dims = [dim // 2 for dim in binvox.dims]
-    binvox.data = resize(binvox.data, (binvox.dims[0], binvox.dims[1], binvox.dims[2]))
-    return binvox
-

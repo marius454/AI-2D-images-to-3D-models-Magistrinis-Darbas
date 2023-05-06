@@ -1,13 +1,14 @@
-tensorflow # Afterwards you need to uninstall tensoflow and install tensorflow-gpu for dependencies to be correct
-tensorflow_datasets
+tensorflow # Afterwards you need to uninstall tensoflow and install tensorflow-gpu<2.11 for dependencies to be correct
+#tensorflow_datasets
 tensorflow_probability<0.19
-git+https://github.com/tensorflow/examples.git
+#git+https://github.com/tensorflow/examples.git
 numpy
 matplotlib
 IPython
 pyyaml 
 h5py
 pydot
+scikit-image
 # graphviz (https://graphviz.gitlab.io/download/)
 
 dataIO

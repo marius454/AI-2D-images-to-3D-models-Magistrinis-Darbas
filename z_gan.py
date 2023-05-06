@@ -6,8 +6,8 @@ import dataIO as d
 import custom_layers
 import os
 
-# Based on the GENERATIVE ADVERSARIAL NETWORKS FOR SINGLE PHOTO 3D RECONSTRUCTION by V.V.Kniaz et al.
-# as well as Image-to-Voxel Model Translation with Conditional Adversarial Networks by V.V.Kniaz et al.
+# Based on the "GENERATIVE ADVERSARIAL NETWORKS FOR SINGLE PHOTO 3D RECONSTRUCTION" by V.V.Kniaz et al.
+# and "Image-to-Voxel Model Translation with Conditional Adversarial Networks" by V.V.Kniaz et al.
 # pix2pix (Isola et al., 2017) (U-net) is used as the starting point for this model
 # the only changes are 3D deconvolution and the required skip connection changes for that
 # https://www.tensorflow.org/tutorials/generative/pix2pix
@@ -69,7 +69,7 @@ def make_generator_model():
     ]
 
     initializer = tf.random_normal_initializer(0., 0.02)
-    last = tf.keras.layers.Conv3DTranspose(1, 4, strides=2, padding='same',
+    last = tf.keras.layers.Conv3DTranspose(filters=1, kernel_size=4, strides=2, padding='same',
         kernel_initializer=initializer, use_bias=False,
         activation='tanh') 
 
