@@ -133,6 +133,8 @@ def reconstruction_loss(real_shapes, generated_shapes):
 
 
 
+
+
 def kullback_leiber_loss(z_means, z_vars, z_size = 200):
     """
     Calculate the Kullback-Leiber dvergence DKL(q(z|y) || p(z))\n

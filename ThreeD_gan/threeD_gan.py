@@ -137,7 +137,6 @@ class ThreeD_gan(tf.keras.Model):
         self.d_optimizer = d_optimizer
         self.e_optimizer = e_optimizer
 
-
     def train_step(self, data):
         # Data will be a tensorflow dataset containing (image, 3d_model) pairs
         # train_step is called for every batch of data
