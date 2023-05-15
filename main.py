@@ -10,7 +10,7 @@ import binvox_rw as bv
 
 import data_processing as dp
 import ThreeD_gan.threeD_gan as threeD_gan
-from  ThreeD_gan.threeD_gan_run import run_3D_VAE_GAN, load_and_show_3D_VAE_GAN
+from  ThreeD_gan.threeD_gan_run import run_3D_VAE_GAN, load_and_show_3D_VAE_GAN, continue_from_checkpoint
 import z_gan
 import variables as var
 
@@ -20,14 +20,31 @@ import variables as var
 # tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
 # run_3D_VAE_GAN("shapenet_tables", epochs=100)
-run_3D_VAE_GAN("shapenet_tables2", epochs=100)
+run_3D_VAE_GAN("shapenet_tables2", epochs=100, user_lr_schedule=False)
 # run_3D_VAE_GAN("shapenet_limited_tables", epochs=10)
-# run_3D_VAE_GAN("shapenet_single_table", epochs=3)
+# run_3D_VAE_GAN("shapenet_single_table", epochs=3, save_checkpoints = True)
 
-# load_and_show_3D_VAE_GAN("./training_checkpoints/3D_GAN_shapenet_tables_disc_lr-0.0001_gen_lr-0.0025_a1-5_a2-1e-1")
+# continue_from_checkpoint("./training_checkpoints/3D_GAN_shapenet_tables2_disc_lr-2e-05_gen_lr-0.0024_enc_lr-0.0005_a1-5_a2-0.0005_batch_size-64_latest_epoch",
+#                          dataset_name="shapenet_tables2", epochs=17)
+
+## lOAD MODEL WEIGHTS FROM CHECKPOINT AND SHOW THE RESULTS
+# load_and_show_3D_VAE_GAN(
+#     # checkpoint_path = "../backups/checkpoints/2023-05-07 epoch 99 d_lr-5e-5 batch-64/3D_GAN_shapenet_tables_disc_lr-5e-05_gen_lr-0.0025_enc_lr-0.001_a1-5_a2-0.0005_voxel_weight-1_batch_size-64"
+#     checkpoint_path = "./training_checkpoints/3D_GAN_shapenet_tables2_disc_lr-2e-05_gen_lr-0.0021_enc_lr-0.001_a1-5_a2-0.0005_batch_size-64_best_train",
+#     # shape_code = "7d3fc73ccd968863e40d907aaaf9adfd",
+#     # shape_code = "8938cbf318d05cf44854921d37f7e048",
+#     # shape_code = "582343e970abd505f155d75bbf62b80", # from test set
+#     # shape_code = "4b22b93f9f881fe3434cc1450456532d", # from test set
+#     # screenshot_number = 6,
+# )
 
 
-
+## RANDOM PIECES OF CODE USED FOR VARIOUS TESTING
+# shape_code = "7807caccf26f7845e5cf802ea0702182"
+# image = dp.load_single_image(f'./Data/ShapeNetSem/screenshots/{shape_code}/{shape_code}-6.png', 512)
+# # dp.show_single_image(image)
+# model = dp.get_shape(f"C:/old pc/Downloads/ShapeNetSem/tables-binvox-64/{shape_code}.binvox")
+# dp.show_image_and_shape(image, model.data, model.dims)
 
 # shape = dp.get_shape('./Data/ShapeNetSem/models-binvox-custom/db80fbb9728e5df343f47bfd2fc426f7.binvox', 2)
 # dp.plot_3d_model(shape.data, shape.dims)

@@ -1,9 +1,9 @@
 z_size = 200  # 200 (in the paper)
 epochs = 100  # 100
-batch_size = 100  # 100
-generator_lr = 0.0025  # 0.0025
-discriminator_lr = 7e-5  # 1e-5
-encoder_lr = 0.001  # 0.0003 (given in Larsen et al. (2016))
+batch_size = 64  # 100 
+generator_lr = [0.0025, 0.00255, 0.0023, 0.002]  # 0.0025
+discriminator_lr = [0.000033, 0.00005, 0.000035, 0.00002]  # 1e-5 / 0.00001 (resume training with 0.000024 if 0.000025 does not work, stopped after epoch 6)
+encoder_lr = [0.001, 0.0008, 0.0006, 0.0004]  # 0.0003 (given in Larsen et al. (2016))
 discriminator_training_threshold = 0.8  # 0.8
 adam_beta = 0.5  # 0.5
 image_res = 256  # 256
@@ -12,17 +12,19 @@ shape_res = 64  # 64
 # KL divergence and reconstruction loss weights described in the paper
 # it is unclear how exactly they are supposed to be used
 alpha_1 = 5  # 5
-alpha_2 = 5e-4  # 1e-4
+alpha_2 = 0.0005  # 1e-4 / 0.0001
 
 discriminator_activation = 'sigmoid'  # 'sigmoid'
 generator_activation = 'sigmoid'  # 'sigmoid'
 
-use_eager_mode = False
+use_eager_mode = False # Need to also comment out or uncomment the @tf.function descriptors from threeD_gan.py train steps accordingly
 add_noise_to_input_shapes = True
 add_noise_to_discriminator_labels = True
 backgroud_weight = 1
 voxel_weight = 1
-display_callback_frequency = 10
+display_callback_frequency = 100
+training_split = 0.8
+shape_data_dir = "./Data/ShapeNetSem/tables-binvox-64"
 
 
 
@@ -81,3 +83,32 @@ display_callback_frequency = 10
 # At epoch 56 the reconstruction is still being reduced at a pretty slow but steady pace.
 # at epoch 60 the cube gets bigger again when testing with the standar table with bench image. Need to test with other images.
 # by the end disc accuracy always stays above 80%
+
+
+## tables1, disc_lr = 5e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 5e-4, tables 1, without images 8 and 12, batch size 64
+# discriminator cannot keep up with the generator
+# actually got usable results, however the image and shape pairs do not match, perhaps there was a issue when making image-shape pairs
+# there was indeed an issue with the training data images were not being paired up with the correct shapes.
+
+## tables2 with train/test 80/20%, disc_lr = 5e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 5e-4, without images 8 and 12, batch size 64
+# generator falls behind, recon loss on the test set does not decrese
+# try settings from the paper 
+
+## tables2 with train/test 80/20%, disc_lr = 1e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 1e-4, without images 8 and 12, batch size 64 after fixiing image rotation
+# generator get overtrained and stuck 100% accuracy with the discriminator guessing that all shapes are real
+
+## tables2 with train/test 80/20%, disc_lr = 4e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 4e-4, without images 8 and 12, batch size 64
+# generator get overtrained and stuck 100% accuracy with the discriminator guessing that all shapes are real
+
+
+## tables2 with train/test 80/20%, disc_lr = 5e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 5e-4, without images 8 and 12, batch size 64
+# generator accuracy very low, slow progress
+# Stoped after 49 epochs
+
+## tables2 with train/test 80/20%, disc_lr = 4e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 5e-4, without images 8 and 12, batch size 64
+# generator accuracy very low, basically 0, slow progress
+# Stoped after 40 epochs
+
+## tables2 with train/test 80/20%, disc_lr = 2.5e-5, gen_lr = 0.0025, enc_lr = 0.001, a1 = 5, a2 = 5e-4, without images 8 and 12, batch size 64
+# stoped after 63 epochs, discriminator too ahead
+# continued with gen_lr = 0.0024, disc_lr = 0.00002, enc_lr = 0.0005

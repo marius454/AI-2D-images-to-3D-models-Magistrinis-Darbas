@@ -10,6 +10,7 @@ import ThreeD_gan.threeD_gan_blocks as blocks
 import ThreeD_gan.threeD_gan_metrics as metrics
 import ThreeD_gan.threeD_gan_helpers as helpers
 import ThreeD_gan.threeD_gan_options as opt
+import data_processing as dp
 
 from tensorflow_probability.python.distributions import kullback_leibler as kl_lib
 import tensorflow_probability as tfp
@@ -145,6 +146,8 @@ class ThreeD_gan(tf.keras.Model):
             print('------------------------------------------')
 
         images, real_shapes = data
+        # for i in range(tf.shape(images)[0].numpy()):
+        #     dp.show_image_and_shape(images[i].numpy(), real_shapes[i].numpy(), (64, 64, 64))
         real_shapes = tf.cast(real_shapes, tf.float32)
         real_shapes = tf.expand_dims(real_shapes, -1)
 
@@ -153,21 +156,12 @@ class ThreeD_gan(tf.keras.Model):
         
         batch_size = tf.shape(images)[0]
         noise = helpers.get_z(0, 1, batch_size)
+        # noise = tf.random.normal([batch_size, opt.z_size])
+        # noise = tf.reshape(noise, (batch_size, 1, 1, 1, opt.z_size))
 
         disc_accuracy = self.train_step1(noise, real_shapes, batch_size)
         self.train_step2(images, real_shapes)
         gen_accuracy = self.train_step3(noise, images, real_shapes)
-
-        # generated_shapes = self.generator(inputs=noise, training=False)
-        # predictions_real = self.discriminator(inputs = real_shapes, training = False)
-        # predictions_fake = self.discriminator(inputs = generated_shapes, training = False)
-        # disc_loss = metrics.discriminator_loss(self.disc_loss_fn, predictions_real, predictions_fake, batch_size)
-
-        # z_means, z_vars, z = self.encoder(inputs=images, training=False)
-        # generated_shapes = self.generator(inputs=z, training=False)
-        # enc_loss = metrics.vae_loss(z_means, z_vars, real_shapes, generated_shapes)
-        
-        # print (f"Overall loss: {disc_loss + enc_loss}")
 
         return {
             "disc_loss": self.disc_loss_tracker.result(),
@@ -176,8 +170,38 @@ class ThreeD_gan(tf.keras.Model):
             "gen_loss": self.gen_loss_tracker.result(),
             "gen_accuracy": gen_accuracy,
             "overall_loss": self.disc_loss_tracker.result() + self.enc_loss_tracker.result() + self.gen_loss_tracker.result(),
-            }
+            "g_lr": self.g_optimizer.learning_rate,
+            "d_lr": self.d_optimizer.learning_rate,
+            "e_lr": self.e_optimizer.learning_rate,
+        }
 
+    def test_step(self, data):
+        images, real_shapes = data
+        real_shapes = tf.cast(real_shapes, tf.float32)
+        real_shapes = tf.expand_dims(real_shapes, -1)
+
+        batch_size = tf.shape(images)[0]
+        noise = helpers.get_z(0, 1, batch_size)
+        # noise = tf.random.normal([batch_size, opt.z_size])
+        # noise = tf.reshape(noise, (batch_size, 1, 1, 1, opt.z_size))
+
+        generated_shapes = self.generator(inputs=noise, training=False)
+        predictions_real = self.discriminator(inputs = real_shapes, training = False)
+        predictions_fake = self.discriminator(inputs = generated_shapes, training = False)
+        disc_loss = metrics.discriminator_loss(self.disc_loss_fn, predictions_real, predictions_fake, batch_size)
+
+        z_means, z_vars, z = self.encoder(inputs=images, training=False)
+        generated_shapes = self.generator(inputs=z, training=False)
+        enc_loss = metrics.vae_loss(z_means, z_vars, real_shapes, generated_shapes)
+        
+        if (opt.use_eager_mode):
+            print (f"Overall val loss: {disc_loss + enc_loss}")
+            
+        return {
+            "disc_loss": disc_loss,
+            "enc_loss": enc_loss,
+            "overall_loss": disc_loss + enc_loss,
+        }
 
 
     @tf.function
@@ -197,7 +221,7 @@ class ThreeD_gan(tf.keras.Model):
             print(f"DISCRIMINATOR ACCURACY: {disc_accuracy}")
             print('')
 
-        if (disc_accuracy < 0.8):
+        if (disc_accuracy < opt.discriminator_training_threshold):
             gradients_of_discriminator = disc_tape.gradient(disc_loss, self.discriminator.trainable_variables)
             self.d_optimizer.apply_gradients(zip(gradients_of_discriminator, self.discriminator.trainable_variables))
         

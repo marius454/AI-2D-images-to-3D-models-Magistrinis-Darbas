@@ -125,11 +125,18 @@ def reconstruction_loss(real_shapes, generated_shapes):
 
     # USE SQARED EUCLIDEAN DISTACE
     euclidean_distance_per_batch = tf.reduce_sum(tf.math.squared_difference(
-            tf.reshape(generated_shapes, (-1, 64 * 64 * 64)) * opt.voxel_weight, 
-            tf.reshape(real_shapes, (-1, 64 * 64 * 64)) * opt.voxel_weight,
+            tf.reshape(generated_shapes, (-1, 64 * 64 * 64)), 
+            tf.reshape(real_shapes, (-1, 64 * 64 * 64)),
         ), 1)
     return tf.reduce_mean(euclidean_distance_per_batch)
-    # return euclidean_distance_per_batch
+
+    # USE SQARED EUCLIDEAN DISTACE WITH WEIGHTS-ish
+    # euclidean_distance_per_batch = tf.reduce_sum(tf.math.squared_difference(
+    #         tf.reshape(generated_shapes, (-1, 64 * 64 * 64)) * opt.voxel_weight, 
+    #         tf.reshape(real_shapes, (-1, 64 * 64 * 64)) * opt.voxel_weight,
+    #     ), 1)
+    # return tf.reduce_mean(euclidean_distance_per_batch)
+    # # return euclidean_distance_per_batch
 
 
 

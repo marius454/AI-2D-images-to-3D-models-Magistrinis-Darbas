@@ -12,20 +12,20 @@ import random
 
 from skimage.transform import resize
 
-def load_single_image(imagePath: str):
+# TODO: need to fix with image_res when decoding
+def load_single_image(imagePath: str, image_res):
     """Load image file into code as tensor."""
     image = tf.io.read_file(imagePath)
     if imagePath.endswith(".jpg"):
-        image = decode_jpeg(image)
+        image = decode_jpeg(image, image_res)
     elif imagePath.endswith(".png"):
-        image = decode_png(image)
+        image = decode_png(image, image_res)
 
     return image
 
 def show_single_image(image):
     """Display a single 2D image using matplotlib."""
-    print('show image')
-    plt.figure(figsize=(10, 5))
+    plt.figure(figsize=(8, 5))
 
     plt.title('Image')
     plt.imshow(tf.cast(image, tf.uint8))
@@ -34,19 +34,15 @@ def show_single_image(image):
 
 
 
-def decode_jpeg(image, resize_method='bilinear', image_res = None):
+def decode_jpeg(image, image_res, resize_method='bilinear'):
     """Load jpeg image into a tensor."""
     image = tf.io.decode_jpeg(image, channels=3)
-    if (image_res):
-        image = tf.image.resize(image, [image_res, image_res], method=resize_method)
-    return image
+    return tf.image.resize(image, [image_res, image_res], method=resize_method)
 
-def decode_png(image, resize_method='bilinear', image_res = None):
+def decode_png(image, image_res, resize_method='bilinear'):
     """Load png image into a tensor."""
     image = tf.io.decode_png(image, channels=3)
-    if (image_res):
-        image = tf.image.resize(image, [image_res, image_res], method=resize_method)
-    return image
+    return tf.image.resize(image, [image_res, image_res], method=resize_method)
 
 def normalize_image(image):
     """Normalize 8 bit image into range [0, 1]."""
@@ -78,32 +74,52 @@ def plot_3d_model(model, dimensions = (128, 128, 128)):
     ax.set_aspect('equal')
     plt.show()
 
-
-# TODO make sure this is functional
-def show_image_and_shape(image, real_shape, encoder, generator, dimensions = (128, 128, 128)):
+def show_image_and_shapes(image, real_shape, generated_shape, dimensions = (128, 128, 128)):
     """Show the image of an object, it's ground trush 3D model, and the generated model."""
-    plt.figure(figsize=(10, 5))
-
-    title = ['Input Image', 'True shape', 'Generated shape']
+    title = ['Input Image', 'True Shape', 'Generated Shape']
     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
 
-    plt.subplot(1, len(title), 1)
-    plt.title('Input Image')
-    plt.imshow(tf.keras.utils.array_to_img(image))
-    plt.axis('off')
+    plot = plt.figure(figsize=(15, 5))
 
-    plt.subplot(1, len(title), 2)
-    plt.title(title[0])
-    plt.voxels(x, y, z, real_shape)
-    plt.axis('off')
+    ix = plot.add_subplot(1, len(title), 1)
+    ix.set_title(title[0])
+    ix.imshow(tf.keras.utils.array_to_img(image))
+    ix.axis('off')
 
-    z = encoder(image)
-    generated_shape = generator(z, training = False)
+    rx = plot.add_subplot(1, len(title), 2, projection='3d')
+    rx.voxels(x, y, z, real_shape)
+    rx.set_title(title[1])
+    rx.set(xlabel='x', ylabel='y', zlabel='z')
+    rx.set_aspect('equal')
+    # rx.axis('off')
 
-    plt.subplot(1, len(title), 2)
-    plt.title(title[0])
-    plt.voxels(x, y, z, generated_shape)
-    plt.axis('off')
+    gx = plot.add_subplot(1, len(title), 3, projection='3d')
+    gx.voxels(x, y, z, generated_shape)
+    gx.set_title(title[2])
+    gx.set(xlabel='x', ylabel='y', zlabel='z')
+    gx.set_aspect('equal')
+    # gx.axis('off')
+        
+    plt.show()
+
+def show_image_and_shape(image, shape, dimensions = (128, 128, 128)):
+    """Show the image of an object and it's ground trush 3D model"""
+    title = ['Image', 'Shape']
+    x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
+
+    plot = plt.figure(figsize=(12, 5))
+
+    ix = plot.add_subplot(1, len(title), 1)
+    ix.set_title(title[0])
+    ix.imshow(tf.keras.utils.array_to_img(image))
+    ix.axis('off')
+
+    rx = plot.add_subplot(1, len(title), 2, projection='3d')
+    rx.voxels(x, y, z, shape)
+    rx.set_title(title[1])
+    rx.set(xlabel='x', ylabel='y', zlabel='z')
+    rx.set_aspect('equal')
+    # rx.axis('off')
         
     plt.show()
 
@@ -152,7 +168,7 @@ def get_shapes(shape_codes, directory, downscale_factor = None):
 
     for file in os.listdir(directory):
         if Path(file).stem in shape_codes:
-            print ("getting shapes: " + Path(file).stem)
+            # print ("getting shape: " + Path(file).stem)
             with open(directory + file, "rb") as f:
                 shapes[Path(file).stem] = bv.read_as_3d_array(f)
                 if downscale_factor:
@@ -171,12 +187,13 @@ def get_shape_screenshots(shape_codes, directory, image_res):
 
     for folder in os.listdir(directory):
         if folder in shape_codes:
-            print ("getting screenshots: " + folder)
+            # print ("getting screenshots: " + folder)
             images = []
 
             # Load images from the selections of angles in range [1, 13]
             # 8 and 12 might not be good, because with some models, the image might be straight on and not provido much 3D information.
-            for i in [6, 7, 8, 9, 10, 11, 12, 13]:
+            # for i in [6, 7, 8, 9, 10, 11, 12, 13]:
+            for i in [6, 7, 9, 10, 11, 13]:
                 image = decode_png(tf.io.read_file(f"{directory + folder}/{folder}-{i}.png"), image_res)
                 image = normalize_image(image)
                 images.append(image)
@@ -186,13 +203,13 @@ def get_shape_screenshots(shape_codes, directory, image_res):
 
 
 # TODO Will have to make this more portable, currently other users will have to set up datasets themselves
-def load_data(dataset, image_res, align_to_image = False, downscale_factor = None):
+def load_data(dataset, shapes_dir, image_res, downscale_factor = None):
     """
     Load shape and image data from a predifened shape code file into a tensor dataset
 
-    `shapenet_tables` - load dataset of 436 table and desk objects collected based on their metadata wnsynet codes\n
-    `shapenet_tables2` - load dataset of 677 table and desk objects collected based on their metadata categories\n
-    `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 300, but might change)\n
+    `shapenet_tables` - load dataset of 431 table and desk objects collected based on their metadata wnsynet codes\n
+    `shapenet_tables2` - load dataset of 670 table and desk objects collected based on their metadata categories\n
+    `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 100, but might change)\n
     `shapenet_single_table` - load a single table object from the shapenet_tables set
     """
     datasets = {
@@ -204,22 +221,26 @@ def load_data(dataset, image_res, align_to_image = False, downscale_factor = Non
     if dataset not in datasets.keys():
         raise Exception('undefined dataset name given to load_data()')
 
-    load_shapenet_data(dataset[dataset], image_res, downscale_factor)
+    return load_shapenet_data(datasets[dataset], shapes_dir, image_res, downscale_factor)
 
 
-def load_shapenet_data(codes_directory, image_res, downscale_factor = None):
+def load_shapenet_data(codes_filepath, shapes_dir, image_res, downscale_factor = None):
     """Load shapenet data into (shape, image) pairs tensor."""
-    shape_codes = get_shape_code_list(codes_directory)
-    shapes = get_shapes(shape_codes, "./Data/ShapeNetSem/models-binvox-custom/", downscale_factor)
-    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res, )
+    shape_codes = get_shape_code_list(codes_filepath)
+    shapes = get_shapes(shape_codes, shapes_dir, downscale_factor)
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res)
 
     print("\nFormating data as (image, shape) pairs")
-    inputs = tf.nest.flatten(shape_screenshots.values())
+    inputs = []
     labels = []
     for code in shape_codes:
-        shape_data = np.array(shapes[code].data)
         for i in range(len(shape_screenshots[code])):
-            labels.append(shape_data)
+            inputs.append(shape_screenshots[code][i])
+            labels.append(np.array(shapes[code].data))
+
+    ## TEST IF SHAPES ARE BEING PAIRED CORRECTLY
+    # for i in range(len(inputs)):
+    #     show_image_and_shape(inputs[i], labels[i], shapes[shape_codes[0]].dims)
 
     return tf.data.Dataset.from_tensor_slices((inputs, labels))
 
