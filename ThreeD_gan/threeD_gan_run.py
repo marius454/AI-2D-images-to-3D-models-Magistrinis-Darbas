@@ -86,7 +86,7 @@ def load_and_show_3D_VAE_GAN(checkpoint_path, real_shape_dir = opt.shape_data_di
     model.load_weights(checkpoint_path).expect_partial()
 
     print("Loading image")
-    image = dp.load_single_image(f'./Data/ShapeNetSem/screenshots/{shape_code}/{shape_code}-{screenshot_number}.png', image_res = opt.image_res)
+    image = dp.load_single_image(f'./Data/ShapeNetSem/table_screenshots/{shape_code}/{shape_code}-{screenshot_number}.png', image_res = opt.image_res)
     image = dp.normalize_image(image)
     image = tf.reshape(image, (-1, opt.image_res, opt.image_res, 3))
 

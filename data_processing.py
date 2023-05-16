@@ -227,7 +227,7 @@ def load_shapenet_data(codes_filepath, shapes_dir, image_res, downscale_factor =
     """Load shapenet data into (shape, image) pairs tensor."""
     shape_codes = get_shape_code_list(codes_filepath)
     shapes = get_shapes(shape_codes, shapes_dir, downscale_factor)
-    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res)
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/table_screenshots/", image_res)
 
     print("\nFormating data as (image, shape) pairs")
     inputs = []

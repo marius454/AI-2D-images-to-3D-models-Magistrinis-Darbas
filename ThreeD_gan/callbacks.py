@@ -8,7 +8,7 @@ class DisplayCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if ((epoch + 1) % opt.display_callback_frequency == 0):
             print("Loading image")
-            image = dp.load_single_image(f'./Data/ShapeNetSem/screenshots/db80fbb9728e5df343f47bfd2fc426f7/db80fbb9728e5df343f47bfd2fc426f7-7.png', image_res = opt.image_res)
+            image = dp.load_single_image(f'./Data/ShapeNetSem/table_screenshots/db80fbb9728e5df343f47bfd2fc426f7/db80fbb9728e5df343f47bfd2fc426f7-7.png', image_res = opt.image_res)
             image = dp.normalize_image(image)
             image = tf.reshape(image, (-1, opt.image_res, opt.image_res, 3))
 
