@@ -1,29 +1,23 @@
 import tensorflow as tf
 import numpy as np
-# import os
-# import sys
-# import tensorflow_datasets as tfds
-# import time
-# import string
 import matplotlib.pyplot as plt
 import binvox_rw as bv
 
 import data_processing as dp
 import ThreeD_gan.threeD_gan as threeD_gan
 from  ThreeD_gan.threeD_gan_run import run_3D_VAE_GAN, load_and_show_3D_VAE_GAN, continue_from_checkpoint
-import z_gan
-import variables as var
 
 # from tensorflow.python.client import device_lib
 # print(device_lib.list_local_devices())
-
 # tf.keras.mixed_precision.set_global_policy('mixed_float16')
 
+## Train model
 # run_3D_VAE_GAN("shapenet_tables", epochs=100)
-run_3D_VAE_GAN("shapenet_tables2", epochs=100, user_lr_schedule=False)
+# run_3D_VAE_GAN("shapenet_tables2", epochs=100, user_lr_schedule=False)
 # run_3D_VAE_GAN("shapenet_limited_tables", epochs=10)
 # run_3D_VAE_GAN("shapenet_single_table", epochs=3, save_checkpoints = True)
 
+## Train model continueing from checkpoint
 # continue_from_checkpoint("./training_checkpoints/3D_GAN_shapenet_tables2_disc_lr-2e-05_gen_lr-0.0024_enc_lr-0.0005_a1-5_a2-0.0005_batch_size-64_latest_epoch",
 #                          dataset_name="shapenet_tables2", epochs=17)
 
@@ -37,6 +31,11 @@ run_3D_VAE_GAN("shapenet_tables2", epochs=100, user_lr_schedule=False)
 #     # shape_code = "4b22b93f9f881fe3434cc1450456532d", # from test set
 #     # screenshot_number = 6,
 # )
+
+
+## Plot AI model to png
+model = threeD_gan.Generator()
+tf.keras.utils.plot_model(model, show_shapes=True)
 
 
 ## RANDOM PIECES OF CODE USED FOR VARIOUS TESTING

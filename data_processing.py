@@ -1,6 +1,5 @@
 import tensorflow as tf
 import os
-import variables as var
 from time import sleep
 import numpy as np
 from random import randrange
@@ -49,10 +48,10 @@ def normalize_image(image):
     image = tf.cast(image, tf.float32) / 255.0
     return image
 
-# def add_sample_weights(shape, weight):
+# def add_sample_weights(shape, background_weight, voxel_weight):
 #     """Add weights to positions with voxels in the ground truth shapes"""
 #     # Set class weights
-#     class_weights = tf.constant([var.threeD_gan_background_weight, var.threeD_gan_voxel_weight])
+#     class_weights = tf.constant([background_weight, voxel_weight])
 #     # Normalize to range [0, 1]
 #     class_weights = tf.cast((class_weights/tf.reduce_sum(class_weights)), dtype=tf.float16)
 #     # Create sample weights

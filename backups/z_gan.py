@@ -3,7 +3,7 @@ import tensorflow as tf
 import variables as var
 import data_processing as dp
 import dataIO as d
-import custom_layers
+import backups.custom_layers as custom_layers
 import os
 
 # Based on the "GENERATIVE ADVERSARIAL NETWORKS FOR SINGLE PHOTO 3D RECONSTRUCTION" by V.V.Kniaz et al.

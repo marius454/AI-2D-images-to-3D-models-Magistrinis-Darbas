@@ -1,8 +1,15 @@
-Data/
+Data/Fruxel_models
+Data/Ikea
+Data/ShapeNetCore.v1
+Data/ShapeNetCore.v2
+Data/ShapeNetSem/models-binvox
+Data/ShapeNetSem/models-binvox-custom
+Data/ShapeNetSem/models-binvox-solid
+Data/ShapeNetSem/screenshots/*
+
 .vscode/
 .venv/
 __pycache__/
 TensorLogs/
 training_checkpoints/
-
 *.pdf

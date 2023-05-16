@@ -1,7 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import dataIO as d
-import custom_layers
+import backups.custom_layers as custom_layers
 import os
 import time
 import gc
@@ -129,8 +129,7 @@ class ThreeD_gan(tf.keras.Model):
 
     def call(self, inputs):
         z_means, z_vars, z = self.encoder(inputs)
-        generated_models = self.generator(z)
-        return generated_models
+        return self.generator(z)
     
     def compile(self, d_optimizer, g_optimizer, e_optimizer):
         super(ThreeD_gan, self).compile()
@@ -162,6 +161,11 @@ class ThreeD_gan(tf.keras.Model):
         disc_accuracy = self.train_step1(noise, real_shapes, batch_size)
         self.train_step2(images, real_shapes)
         gen_accuracy = self.train_step3(noise, images, real_shapes)
+
+        if (opt.use_eager_mode):
+            print (f"Overall val loss: {self.disc_loss_tracker.result() + self.enc_loss_tracker.result() + self.gen_loss_tracker.result()}")
+            print('------------------------------------------')
+            print('')
 
         return {
             "disc_loss": self.disc_loss_tracker.result(),
@@ -196,6 +200,8 @@ class ThreeD_gan(tf.keras.Model):
         
         if (opt.use_eager_mode):
             print (f"Overall val loss: {disc_loss + enc_loss}")
+            print('------------------------------------------')
+            print('')
             
         return {
             "disc_loss": disc_loss,
@@ -260,8 +266,6 @@ class ThreeD_gan(tf.keras.Model):
         if (opt.use_eager_mode):
             print(f"mean output_from_noise: {tf.math.reduce_mean(output_from_noise[:, 0]).numpy()}")
             print(f"GENERATOR_ACCURACY: {gen_accuracy}")
-            print('------------------------------------------')
-            print('')
 
         # if (gen_accuracy < 0.9):
         #     gradients_of_generator = gen_tape.gradient(gen_loss, self.generator.trainable_variables)
