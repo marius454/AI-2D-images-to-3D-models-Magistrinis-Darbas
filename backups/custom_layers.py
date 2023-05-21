@@ -1,5 +1,5 @@
 import tensorflow as tf
-import variables as var
+# import variables as var
 
 class Sampling(tf.keras.layers.Layer):
     """Samples an n dimmentional latent vector z from an n*2 dimmensional Gaussian latent space."""

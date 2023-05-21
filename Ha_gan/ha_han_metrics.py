@@ -18,3 +18,10 @@ def generator_accuracy(generated_output):
     predictions = tf.cast(tf.math.greater_equal(generated_output, 0.5), tf.float16)
     accuracy = tf.math.reduce_mean(predictions)
     return accuracy
+
+def voxel_accuracy(real_shapes, generated_shapes, threshold = 0):
+    real_binary = tf.cast(tf.math.greater_equal(real_shapes, threshold), tf.float16)
+    generated_binary = tf.cast(tf.math.greater_equal(generated_shapes, threshold), tf.float16)
+    mae = tf.keras.losses.mean_absolute_error(real_binary, generated_binary)
+
+    return 100 * (1-mae)

@@ -1,8 +1,8 @@
 z_size = 200  # 200 (in the paper)
 epochs = 100  # 100
 batch_size = 64  # 100 
-generator_lr = [0.0025, 0.00255, 0.0023, 0.002]  # 0.0025
-discriminator_lr = [0.000033, 0.00005, 0.000035, 0.00002]  # 1e-5 / 0.00001 (resume training with 0.000024 if 0.000025 does not work, stopped after epoch 6)
+generator_lr = [0.0021, 0.00255, 0.0023, 0.002]  # 0.0025
+discriminator_lr = [0.00002, 0.00005, 0.000035, 0.00002]  # 1e-5 / 0.00001 (resume training with 0.000024 if 0.000025 does not work, stopped after epoch 6)
 encoder_lr = [0.001, 0.0008, 0.0006, 0.0004]  # 0.0003 (given in Larsen et al. (2016))
 discriminator_training_threshold = 0.8  # 0.8
 adam_beta = 0.5  # 0.5

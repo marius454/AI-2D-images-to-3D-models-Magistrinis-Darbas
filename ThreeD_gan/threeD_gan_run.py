@@ -7,15 +7,15 @@ import time
 import gc
 
 import data_processing as dp
-from ThreeD_gan.callbacks import DisplayCallback, LR_callback
+from ThreeD_gan.threeD_gan_callbacks import DisplayCallback, LR_callback
 
 from ThreeD_gan import threeD_gan
 import ThreeD_gan.threeD_gan_options as opt
 
-def run_3D_VAE_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epochs, save_checkpoints = True, user_lr_schedule = False):
+def run_3D_VAE_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epochs, save_checkpoints = True, use_lr_schedule = False):
     ## Load a dataset as tf.Dataset
     print('Loading data')
-    dataset = dp.load_data(dataset_name, shapes_dir=opt.shape_data_dir, image_res=opt.image_res)
+    dataset = dp.load_shapenet_data(dataset_name, shapes_dir=opt.shape_data_dir, image_res=opt.image_res)
     train_data = dataset.take(math.trunc(len(dataset) * opt.training_split))
     test_data = dataset.skip(math.trunc(len(dataset) * opt.training_split))
     train_data = (
@@ -38,7 +38,7 @@ def run_3D_VAE_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epoch
     )
     model.run_eagerly = opt.use_eager_mode
     callbacks = []
-    if (user_lr_schedule):
+    if (use_lr_schedule):
         callbacks.append(LR_callback())
     if (save_checkpoints):
         save_best_val_callback = tf.keras.callbacks.ModelCheckpoint(filepath = f"./training_checkpoints/3D_GAN_{dataset_name}_disc_lr-{opt.discriminator_lr[0]}_gen_lr-{opt.generator_lr[0]}_enc_lr-{opt.encoder_lr[0]}_a1-{opt.alpha_1}_a2-{opt.alpha_2}_batch_size-{batch_size}_best_val",
@@ -75,7 +75,7 @@ def run_3D_VAE_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epoch
         callbacks = callbacks,
     )
     
-def load_and_show_3D_VAE_GAN(checkpoint_path, real_shape_dir = opt.shape_data_dir, shape_code = "db80fbb9728e5df343f47bfd2fc426f7", screenshot_number = 7):
+def load_and_show_3D_VAE_GAN(checkpoint_path, real_shape_dir = opt.shape_data_dir, shape_code = "db80fbb9728e5df343f47bfd2fc426f7", screenshot_number = 7, threshold = 0.5):
     model = threeD_gan.ThreeD_gan()
     # NOT SURE IF THIS IS NECESSARY
     # model.compile(
@@ -95,12 +95,20 @@ def load_and_show_3D_VAE_GAN(checkpoint_path, real_shape_dir = opt.shape_data_di
 
     print("Generating 3D model")
     generated_shape = model.predict(image)
-    generated_shape = tf.math.greater_equal(generated_shape, 0.5)
+    generated_shape = tf.math.greater_equal(generated_shape, threshold)
+    generated_shape = generated_shape[0, :, :, :, 0].numpy()
+
+    # generated_shape = dp.remove_voxel_outliers(generated_shape, 20)
+    generated_shape = dp.get_largest_connected(generated_shape)
     # print(generated_shape[0, :, :, :, 0].numpy())
     
     print("Ploting image and models")
     image = tf.reshape(image, (opt.image_res, opt.image_res, 3))
-    dp.show_image_and_shapes(image, real_shape.data, generated_shape[0, :, :, :, 0].numpy(), real_shape.dims)
+    dp.show_image_and_shapes(image, real_shape.data, generated_shape, real_shape.dims)
+    # dp.plot_3d_model(generated_shape, (64, 64, 64), False)
+
+    vertices, triangles = dp.voxel_to_mesh(generated_shape, use_smoothing = True)
+    dp.plot_3d_mesh(vertices, triangles)
 
 
 def continue_from_checkpoint(checkpoint_path, dataset_name, batch_size = opt.batch_size, epochs = opt.epochs, save_checkpoints = True):

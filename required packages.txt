@@ -10,6 +10,8 @@ pyyaml
 h5py
 pydot
 scikit-image
+PyMCubes
+connected-components-3d
 # graphviz (https://graphviz.gitlab.io/download/)
 
 dataIO

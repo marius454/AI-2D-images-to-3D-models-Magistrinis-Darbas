@@ -8,6 +8,7 @@ import binvox_rw as bv
 import scipy.io
 from pathlib import Path
 import random
+from mpl_toolkits.mplot3d import Axes3D
 
 from skimage.transform import resize
 
@@ -28,6 +29,15 @@ def show_single_image(image):
 
     plt.title('Image')
     plt.imshow(tf.cast(image, tf.uint8))
+    plt.axis('off')
+    plt.show()
+
+def show_single_normalized_image(image):
+    """Display a single 2D normalized image using matplotlib."""
+    plt.figure(figsize=(8, 5))
+
+    plt.title('Image')
+    plt.imshow(tf.keras.utils.array_to_img(image))
     plt.axis('off')
     plt.show()
 
@@ -59,7 +69,7 @@ def normalize_image(image):
 
 
 
-def plot_3d_model(model, dimensions = (128, 128, 128)):
+def plot_3d_model(model, dimensions = (128, 128, 128), show_axis = True):
     """
     Plots a 3D model using matplotlib (binvox formal highly preferable, the code will not receive an error but might not work).
 
@@ -71,9 +81,11 @@ def plot_3d_model(model, dimensions = (128, 128, 128)):
     ax.voxels(x, y, z, model)
     ax.set(xlabel='x', ylabel='y', zlabel='z')
     ax.set_aspect('equal')
+    if (not show_axis):
+        ax.axis('off')
     plt.show()
 
-def show_image_and_shapes(image, real_shape, generated_shape, dimensions = (128, 128, 128)):
+def show_image_and_shapes(image, real_shape, generated_shape, dimensions = (128, 128, 128), show_axis = True):
     """Show the image of an object, it's ground trush 3D model, and the generated model."""
     title = ['Input Image', 'True Shape', 'Generated Shape']
     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
@@ -90,18 +102,20 @@ def show_image_and_shapes(image, real_shape, generated_shape, dimensions = (128,
     rx.set_title(title[1])
     rx.set(xlabel='x', ylabel='y', zlabel='z')
     rx.set_aspect('equal')
-    # rx.axis('off')
+    if (not show_axis):
+        rx.axis('off')
 
     gx = plot.add_subplot(1, len(title), 3, projection='3d')
     gx.voxels(x, y, z, generated_shape)
     gx.set_title(title[2])
     gx.set(xlabel='x', ylabel='y', zlabel='z')
     gx.set_aspect('equal')
-    # gx.axis('off')
+    if (not show_axis):
+        gx.axis('off')
         
     plt.show()
 
-def show_image_and_shape(image, shape, dimensions = (128, 128, 128)):
+def show_image_and_shape(image, shape, dimensions = (128, 128, 128), show_axis = True):
     """Show the image of an object and it's ground trush 3D model"""
     title = ['Image', 'Shape']
     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
@@ -118,7 +132,8 @@ def show_image_and_shape(image, shape, dimensions = (128, 128, 128)):
     rx.set_title(title[1])
     rx.set(xlabel='x', ylabel='y', zlabel='z')
     rx.set_aspect('equal')
-    # rx.axis('off')
+    if (not show_axis):
+        rx.axis('off')
         
     plt.show()
 
@@ -191,7 +206,7 @@ def get_shape_screenshots(shape_codes, directory, image_res):
 
             # Load images from the selections of angles in range [1, 13]
             # 8 and 12 might not be good, because with some models, the image might be straight on and not provido much 3D information.
-            # for i in [6, 7, 8, 9, 10, 11, 12, 13]:
+            # for i in [6, 7, 8, 9, 10, 11, 12, 13]: ## when using ha-gan need to configure e_max_iter accordingly
             for i in [6, 7, 9, 10, 11, 13]:
                 image = decode_png(tf.io.read_file(f"{directory + folder}/{folder}-{i}.png"), image_res)
                 image = normalize_image(image)
@@ -200,34 +215,94 @@ def get_shape_screenshots(shape_codes, directory, image_res):
     
     return shape_screenshots
 
-
-# TODO Will have to make this more portable, currently other users will have to set up datasets themselves
-def load_data(dataset, shapes_dir, image_res, downscale_factor = None):
-    """
-    Load shape and image data from a predifened shape code file into a tensor dataset
-
-    `shapenet_tables` - load dataset of 431 table and desk objects collected based on their metadata wnsynet codes\n
-    `shapenet_tables2` - load dataset of 670 table and desk objects collected based on their metadata categories\n
-    `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 100, but might change)\n
-    `shapenet_single_table` - load a single table object from the shapenet_tables set
-    """
-    datasets = {
-        'shapenet_tables': "./Data/ShapeNetSem/Table.csv", 
-        'shapenet_tables2': "./Data/ShapeNetSem/Table2.csv", 
-        'shapenet_limited_tables': "./Data/ShapeNetSem/limited_table.csv", 
-        'shapenet_single_table': "./Data/ShapeNetSem/single_table.csv"
-    }
-    if dataset not in datasets.keys():
-        raise Exception('undefined dataset name given to load_data()')
-
-    return load_shapenet_data(datasets[dataset], shapes_dir, image_res, downscale_factor)
+def downscale_binvox(binvox, factor = 2):
+    binvox.dims = [dim // 2 for dim in binvox.dims]
+    binvox.data = resize(binvox.data, (binvox.dims[0], binvox.dims[1], binvox.dims[2]))
+    return binvox
 
 
-def load_shapenet_data(codes_filepath, shapes_dir, image_res, downscale_factor = None):
+import cc3d
+def get_largest_connected(shape):
+    '''
+    Returns the largest connected component from a voxel grid `shape`\n
+    `shape` needs to be a 3D numpy array
+    '''
+    connected_shape = cc3d.largest_k(shape, k = 1, connectivity = 26, delta = 0, return_N = False)
+    return connected_shape
+
+def remove_voxel_outliers(shape, threshold):
+    '''
+    Removes connected components, with fewer than `threshold` voxels, from a shape\n
+    `shape` needs to be a 3D numpy array
+    '''
+    pruned_shape = cc3d.dust(shape, threshold = threshold, connectivity = 26, in_place = True)
+    return pruned_shape
+
+import mcubes
+def voxel_to_mesh(shape, use_smoothing = False):
+    '''
+    Converts a voxel model to a mesh model and return the vertices and triangle of the mesh\n
+    `shape` needs to be a 3D numpy array
+    '''
+    if (use_smoothing):
+        shape = mcubes.smooth(shape, 'constrained')
+        vertices, triangles = mcubes.marching_cubes(shape, 0)
+    else:
+        vertices, triangles = mcubes.marching_cubes(shape, 0.5)
+    return vertices, triangles
+
+# def voxel_smoothing(shape, mode = 'mcubes'):
+#     '''
+#     Returns a smoothed voxel model\n
+#     `shape` needs to be a 3D numpy array\n
+#     `mode`:\n
+#     \t - 'mcubes' - uses the smoothing algorithm from the PyMCubes library
+#     '''
+        
+
+#     return smoothed_shape
+
+def mesh_smoothing(shape, mode = 'laplacian'):
+    pass
+
+def plot_3d_mesh(mesh_vertices, mesh_triangles = None):
+    '''
+    Plot mesh grid model using matplotlib
+    '''
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+    if (mesh_triangles.any() == None):
+        ax.plot_surface(mesh_vertices[:, 0], mesh_vertices[:, 1], mesh_vertices[:, 2])
+    else:
+        ax.plot_trisurf(mesh_vertices[:, 0], mesh_vertices[:, 1], mesh_vertices[:, 2], 
+                    triangles = mesh_triangles)
+    ax.set_aspect('equal')
+
+    plt.show()
+
+
+## Load data
+# `shapenet_tables` - load dataset of 431 table and desk objects collected based on their metadata wnsynet codes\n
+# `shapenet_tables2` - load dataset of 670 table and desk objects collected based on their metadata categories\n
+# `shapenet_limited_tables` - load a subset of shapenet_tables with a limited amount of entries (currently 100, but might change)\n
+# `shapenet_single_table` - load a single table object from the shapenet_tables set
+
+datasets = {
+    'shapenet_tables': "./Data/ShapeNetSem/Table.csv", 
+    'shapenet_tables2': "./Data/ShapeNetSem/Table2.csv", 
+    'shapenet_limited_tables': "./Data/ShapeNetSem/limited_table.csv", 
+    'shapenet_single_table': "./Data/ShapeNetSem/single_table.csv",
+    'shapenet_five_tables': "./Data/ShapeNetSem/five_table.csv",
+}
+
+def load_shapenet_data(dataset, shapes_dir, image_res, downscale_factor = None):
     """Load shapenet data into (shape, image) pairs tensor."""
-    shape_codes = get_shape_code_list(codes_filepath)
+    if dataset not in datasets.keys():
+        raise Exception('undefined dataset name given to load_shapenet_data()')
+    
+    shape_codes = get_shape_code_list(datasets[dataset])
     shapes = get_shapes(shape_codes, shapes_dir, downscale_factor)
-    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/table_screenshots/", image_res)
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res)
 
     print("\nFormating data as (image, shape) pairs")
     inputs = []
@@ -243,10 +318,33 @@ def load_shapenet_data(codes_filepath, shapes_dir, image_res, downscale_factor =
 
     return tf.data.Dataset.from_tensor_slices((inputs, labels))
 
-def downscale_binvox(binvox, factor = 2):
-    binvox.dims = [dim // 2 for dim in binvox.dims]
-    binvox.data = resize(binvox.data, (binvox.dims[0], binvox.dims[1], binvox.dims[2]))
-    return binvox
+
+def load_shapenet_data_groups(dataset, shapes64_dir, shapes256_dir, image_res):
+    """Load shapenet data into (images, shape64, shape256) groups tensor."""
+    if dataset not in datasets.keys():
+        raise Exception('undefined dataset name given to load_shapenet_data_groups()')
+    
+    shape_codes = get_shape_code_list(datasets[dataset])
+    shapes64 = get_shapes(shape_codes, shapes64_dir)
+    shapes256 = get_shapes(shape_codes, shapes256_dir)
+    shape_screenshots = get_shape_screenshots(shape_codes, "./Data/ShapeNetSem/screenshots/", image_res)
+    
+    print("\nFormating data as (images, shape64, shape256) groups")
+    inputs = []
+    labels64 = []
+    labels256 = []
+    for code in shape_codes:
+        inputs.append(shape_screenshots[code])
+        labels64.append(np.array(shapes64[code].data))
+        labels256.append(np.array(shapes256[code].data))
+
+    ## TEST IF SHAPES ARE BEING GROUPED CORRECTLY
+    # for i in range(len(inputs)):
+    #     show_single_normalized_image(inputs[i][0])
+    #     plot_3d_model(labels64[i], shapes64[shape_codes[0]].dims)
+    #     plot_3d_model(labels256[i], shapes256[shape_codes[0]].dims)
+
+    return tf.data.Dataset.from_tensor_slices((inputs, labels64, labels256))
 
 
 

@@ -12,7 +12,7 @@ import data_processing as dp
 import ThreeD_gan.threeD_gan as threeD_gan
 from  ThreeD_gan.threeD_gan_run import run_3D_VAE_GAN, load_and_show_3D_VAE_GAN
 import z_gan
-import variables as var
+# import variables as var
 
 
 # prior_means = tf.fill([tf.shape(z_means)[0], z_size], 0.0)
