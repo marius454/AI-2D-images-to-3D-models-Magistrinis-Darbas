@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 import dataIO as d
-import backups.custom_layers as custom_layers
 import os
 import time
 import gc
@@ -128,8 +127,8 @@ class ThreeD_gan(tf.keras.Model):
         ]
 
     def call(self, inputs):
-        z_means, z_vars, z = self.encoder(inputs)
-        return self.generator(z)
+        z_means, z_vars, z = self.encoder(inputs, training = False)
+        return self.generator(z, training = False)
     
     def compile(self, d_optimizer, g_optimizer, e_optimizer):
         super(ThreeD_gan, self).compile()
@@ -197,6 +196,18 @@ class ThreeD_gan(tf.keras.Model):
         z_means, z_vars, z = self.encoder(inputs=images, training=False)
         generated_shapes = self.generator(inputs=z, training=False)
         enc_loss = metrics.vae_loss(z_means, z_vars, real_shapes, generated_shapes)
+        # recon_accuracy = metrics.reconstruction_accuracy(real_shapes, generated_shapes, threshold=0.3)
+
+        # generated_shapes = tf.math.greater_equal(generated_shapes, 0.1)
+        # processed_shapes = []
+        # for i in range(tf.shape(images)[0]):
+        #     # shape = dp.get_largest_connected(generated_shapes[i, :, :, :, 0].numpy())
+        #     shape = dp.remove_voxel_outliers(generated_shapes[i, :, :, :, 0].numpy(), threshold=30)
+        #     processed_shapes.append(shape)
+        # generated_shapes = tf.Variable(processed_shapes)
+        # generated_shapes = tf.expand_dims(generated_shapes, -1)
+        # generated_shapes = tf.cast(generated_shapes, tf.float16)
+        # recon_accuracy = metrics.reconstruction_accuracy(real_shapes, generated_shapes)
         
         if (opt.use_eager_mode):
             print (f"Overall val loss: {disc_loss + enc_loss}")
@@ -207,6 +218,7 @@ class ThreeD_gan(tf.keras.Model):
             "disc_loss": disc_loss,
             "enc_loss": enc_loss,
             "overall_loss": disc_loss + enc_loss,
+            # "recon_accuracy": recon_accuracy,
         }
 
 

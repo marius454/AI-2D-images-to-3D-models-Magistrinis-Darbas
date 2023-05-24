@@ -115,7 +115,7 @@ def show_image_and_shapes(image, real_shape, generated_shape, dimensions = (128,
         
     plt.show()
 
-def show_image_and_shape(image, shape, dimensions = (128, 128, 128), show_axis = True):
+def show_image_and_shape(image, shape, dimensions = (128, 128, 128), show_axis = True, blocking = True):
     """Show the image of an object and it's ground trush 3D model"""
     title = ['Image', 'Shape']
     x, y, z = np.indices((dimensions[0]+1, dimensions[1]+1, dimensions[2]+1))
@@ -134,8 +134,13 @@ def show_image_and_shape(image, shape, dimensions = (128, 128, 128), show_axis =
     rx.set_aspect('equal')
     if (not show_axis):
         rx.axis('off')
-        
-    plt.show()
+    
+    if (blocking):
+        plt.show()
+    else:
+        plt.ion()
+        plt.show()
+        plt.pause(2)
 
 
 

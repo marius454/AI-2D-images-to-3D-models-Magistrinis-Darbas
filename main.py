@@ -3,6 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import binvox_rw as bv
 import torch
+import time
+import math
 
 import data_processing as dp
 import ThreeD_gan.threeD_gan as threeD_gan
@@ -41,9 +43,43 @@ import Ha_gan.ha_gan_run as ha_gan_run
 #     threshold=0.1
 # )
 
+## Evaluate 3D-VAE-GAN model accuracy
+# dataset = dp.load_shapenet_data('shapenet_tables2', shapes_dir="./Data/ShapeNetSem/tables-binvox-64", image_res=256)
+# train_data = dataset.take(math.trunc(len(dataset) * 0.8))
+# test_data = dataset.skip(math.trunc(len(dataset) * 0.8))
+# train_data = (
+#         train_data
+#         .shuffle(len(train_data))
+#         .batch(64)
+#     )
+# test_data = (test_data.batch(64))
+
+# model = threeD_gan.ThreeD_gan()
+# # model.load_weights("C:/Users/mariu/Desktop/epoch 100 disc_lr-3.3 gen_lr 0.0025/3D_GAN_shapenet_tables2_disc_lr-3.3e-05_gen_lr-0.0025_enc_lr-0.001_a1-5_a2-0.0005_batch_size-64_latest_epoch").expect_partial()
+# model.load_weights("C:/Users/mariu/Desktop/epoch 100 disc_lr-3.3 gen_lr 0.0025/epoch 150/3D_GAN_shapenet_tables2_disc_lr-3.3e-05_gen_lr-0.0025_enc_lr-0.001_a1-5_a2-0.0005_batch_size-64_latest_epoch").expect_partial()
+
+# model.compile(
+#     g_optimizer = tf.keras.optimizers.Adam(0.0025, 0.5),
+#     d_optimizer = tf.keras.optimizers.Adam(0.000033, 0.5),
+#     e_optimizer = tf.keras.optimizers.Adam(0.001),
+# )
+# model.run_eagerly = True
+# print("evaluating")
+# model.evaluate(test_data)
+# image = dp.load_single_image(f'./Data/ShapeNetSem/table_screenshots/8938cbf318d05cf44854921d37f7e048/8938cbf318d05cf44854921d37f7e048-7.png', image_res = 256)
+# image = dp.normalize_image(image)
+# image = tf.reshape(image, (-1, 256, 256, 3))
+# generated_shape = model.predict(image)
+# generated_shape = tf.math.greater_equal(generated_shape, 0.3)
+# generated_shape = generated_shape[0, :, :, :, 0].numpy()
+# image = tf.reshape(image, (256, 256, 3))
+# real_shape = dp.get_shape(f"./Data/ShapeNetSem/tables-binvox-64/8938cbf318d05cf44854921d37f7e048.binvox")
+# dp.show_image_and_shapes(image, real_shape.data, generated_shape, real_shape.dims)
+
+
 ## Train HA-GAN model
 # ha_gan_run.run_HA_GAN("shapenet_tables", epochs=100)
-ha_gan_run.run_HA_GAN("shapenet_tables2", epochs=500, use_test_data=False)
+# ha_gan_run.run_HA_GAN("shapenet_tables2", epochs=500, use_test_data=False)
 # ha_gan_run.run_HA_GAN("shapenet_limited_tables", epochs=5)
 # ha_gan_run.run_HA_GAN("shapenet_five_tables", epochs=4, use_test_data=False)
 
@@ -56,17 +92,21 @@ ha_gan_run.run_HA_GAN("shapenet_tables2", epochs=500, use_test_data=False)
 ## Creating Tensorflow datasets:
 # ha_gan_run.save_HA_GAN_dataset("shapenet_tables")
 
-## Load 3D-VAE-GAN weights from checkpoint and show the result
-# ha_gan_run.load_and_show_HA_GAN(
-#     checkpoint_path = "./training_checkpoints/HA-GAN_shapenet_tables2_disc_lr-0.0001_gen_lr-0.0002_enc_lr-0.0004_lambda-10_batch_size-4_e_iter-3_g_iter2_epoch-020",
-#     # shape_code = "7d3fc73ccd968863e40d907aaaf9adfd",
-#     # shape_code = "8938cbf318d05cf44854921d37f7e048",
-#     # shape_code = "582343e970abd505f155d75bbf62b80", # from test set
-#     # shape_code = "4b22b93f9f881fe3434cc1450456532d", # from test set
-#     # shape_code = "c0470c413b0a260979368d1198f406e7", # from test set
-#     # screenshot_number = 6,
-#     threshold = -0.5
-# )
+# Load 3D-VAE-GAN weights from checkpoint and show the result
+ha_gan_run.load_and_show_HA_GAN(
+    # checkpoint_path="C:/Users/mariu/Desktop/HA-GAN 20 epoch/HA-GAN_shapenet_tables2_disc_lr-0.0001_gen_lr-0.0001_enc_lr-0.0004_lambda-10_batch_size-4_latest_epoch",
+    # checkpoint_path="C:/Users/mariu/Desktop/HA-GAN 180 epochs/HA-GAN_shapenet_tables2_disc_lr-0.0001_gen_lr-0.0001_enc_lr-0.0004_lambda-10_batch_size-4_epoch-020",
+    # checkpoint_path = "./training_checkpoints/HA-GAN_shapenet_tables2_disc_lr-0.0001_gen_lr-0.0004_enc_lr-0.0004_lambda-10_batch_size-4_e_iter-3_g_iter-2_epoch-060",
+    checkpoint_path = "./training_checkpoints/HA-GAN_shapenet_tables2_disc_lr-0.0001_gen_lr-0.0004_enc_lr-0.0002_lambda-0.0001_batch_size-4_e_iter-3_g_iter-2_epoch-050",
+    shape_code = "7d3fc73ccd968863e40d907aaaf9adfd",
+    # shape_code = "8938cbf318d05cf44854921d37f7e048",
+    # shape_code = "582343e970abd505f155d75bbf62b80", # from test set
+    # shape_code = "4b22b93f9f881fe3434cc1450456532d", # from test set
+    # shape_code = "c0470c413b0a260979368d1198f406e7", # from test set
+    # screenshot_number = 6,
+    threshold = -0.5,
+    shape_res = 256,
+)
 
 ## TEST VOXEL TO MESH TRANSFORMATION, SMOOTHING AND MESH PLOTING
 # shape_code = "7807caccf26f7845e5cf802ea0702182"

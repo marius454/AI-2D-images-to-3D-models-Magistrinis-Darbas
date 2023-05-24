@@ -19,10 +19,10 @@ class DisplayCallback(tf.keras.callbacks.Callback):
             self.model.generator.mode = 'eval'
             generated_shape = self.model(image)
             self.model.generator.mode = 'train'
-            generated_shape = tf.math.greater_equal(generated_shape, -0.2)
+            generated_shape = tf.math.greater_equal(generated_shape, -0.4)
             # print(generated_shape[0, :, :, :, 0].numpy())
             
             print("Ploting image and models")
             image = tf.reshape(image, (opt.image_res, opt.image_res, 3))
             # dp.show_image_and_shapes(image, real_shape.data, generated_shape[0, :, :, :, 0].numpy(), real_shape.dims)
-            dp.show_image_and_shape(image, generated_shape[0, :, :, :, 0].numpy(), real_shape.dims)
+            dp.show_image_and_shape(image, generated_shape[0, :, :, :, 0].numpy(), real_shape.dims, blocking = False)

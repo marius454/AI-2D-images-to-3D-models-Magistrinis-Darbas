@@ -167,3 +167,9 @@ def kullback_leiber_loss(z_means, z_vars, z_size = 200):
     # # return KL_divergence_per_batch
 
 
+def reconstruction_accuracy(real_shapes, generated_shapes, threshold = 0.5):
+    real_binary = tf.cast(tf.math.greater_equal(real_shapes, threshold), tf.float32)
+    generated_binary = tf.cast(tf.math.greater_equal(generated_shapes, threshold), tf.float32)
+    mae = tf.keras.losses.mean_absolute_error(real_binary, generated_binary)
+
+    return 100 * (1-mae)

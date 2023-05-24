@@ -91,8 +91,15 @@ def run_HA_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epochs, s
             callbacks = callbacks,
         )
     
-def load_and_show_HA_GAN(checkpoint_path, threshold = 0, shapes256_dir = opt.shapes256_dir, shape_code = "db80fbb9728e5df343f47bfd2fc426f7", screenshot_number = 7):
-    model = ha_gan.HA_GAN(mode = 'eval')
+def load_and_show_HA_GAN(checkpoint_path, threshold = 0, shape_res = 256, shape_code = "db80fbb9728e5df343f47bfd2fc426f7", screenshot_number = 7):
+    if (shape_res == 256):
+        model = ha_gan.HA_GAN(mode = 'eval')
+        shapes_dir = opt.shapes256_dir
+    elif (shape_res == 64):
+        model = ha_gan.HA_GAN(mode = 'eval_small')
+        shapes_dir = opt.shapes64_dir
+    else:
+        raise Exception('undefined shape_res given to load_and_show_HA_GAN()')
     model.load_weights(checkpoint_path).expect_partial()
 
     print("Loading image")
@@ -101,11 +108,11 @@ def load_and_show_HA_GAN(checkpoint_path, threshold = 0, shapes256_dir = opt.sha
     image = tf.reshape(image, (-1, opt.image_res, opt.image_res, 3))
 
     print("Loading real 3D model")
-    real_shape = dp.get_shape(f"{shapes256_dir}/{shape_code}.binvox")
+    real_shape = dp.get_shape(f"{shapes_dir}/{shape_code}.binvox")
 
     print("Generating 3D model")
-    generated_shape = model(image)
-    # generated_shape = model(image, use_encoder = False)
+    # generated_shape = model(image)
+    generated_shape = model(image, use_encoder = False)
     generated_shape = tf.math.greater_equal(generated_shape, threshold)
     
     print("Ploting image and models")

@@ -25,3 +25,15 @@ def voxel_accuracy(real_shapes, generated_shapes, threshold = 0):
     mae = tf.keras.losses.mean_absolute_error(real_binary, generated_binary)
 
     return 100 * (1-mae)
+
+def reconstruction_loss(real_shapes, generated_shapes):
+    """
+    Calculate the Euclidan distance ||G(E(y)) − x||2\n
+    Sum over batch (mean) reduction is applied
+    """
+    # USE SQARED EUCLIDEAN DISTACE
+    euclidean_distance_per_batch = tf.reduce_sum(tf.math.squared_difference(
+            tf.reshape(generated_shapes, (-1, 64 * 64 * 64)), 
+            tf.reshape(real_shapes, (-1, 64 * 64 * 64)),
+        ), 1)
+    return tf.reduce_mean(euclidean_distance_per_batch)

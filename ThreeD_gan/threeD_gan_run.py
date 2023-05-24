@@ -12,6 +12,15 @@ from ThreeD_gan.threeD_gan_callbacks import DisplayCallback, LR_callback
 from ThreeD_gan import threeD_gan
 import ThreeD_gan.threeD_gan_options as opt
 
+def save_HA_GAN_dataset(dataset_name):
+    print('Loading data')
+    dataset = dp.load_shapenet_data(dataset_name, shapes_dir=opt.shape_data_dir, image_res=opt.image_res)
+    train_data = dataset.take(math.trunc(len(dataset) * opt.training_split))
+    test_data = dataset.skip(math.trunc(len(dataset) * opt.training_split))
+
+    train_data.save(f"./Data/Custom_Datasets/3D_GAN_{dataset_name}_train")
+    test_data.save(f"./Data/Custom_Datasets/3D_GAN_{dataset_name}_test")
+
 def run_3D_VAE_GAN(dataset_name, batch_size = opt.batch_size, epochs = opt.epochs, save_checkpoints = True, use_lr_schedule = False):
     ## Load a dataset as tf.Dataset
     print('Loading data')
@@ -104,7 +113,8 @@ def load_and_show_3D_VAE_GAN(checkpoint_path, real_shape_dir = opt.shape_data_di
     
     print("Ploting image and models")
     image = tf.reshape(image, (opt.image_res, opt.image_res, 3))
-    dp.show_image_and_shapes(image, real_shape.data, generated_shape, real_shape.dims)
+    # dp.show_image_and_shapes(image, real_shape.data, generated_shape, real_shape.dims)
+    dp.show_image_and_shape(image, generated_shape, real_shape.dims)
     # dp.plot_3d_model(generated_shape, (64, 64, 64), False)
 
     vertices, triangles = dp.voxel_to_mesh(generated_shape, use_smoothing = True)
